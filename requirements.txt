@@ -22,3 +22,4 @@ WTForms==3.0.1
 pip==22.0.3
 wheel==0.37.1
 python-decouple==3.6
+gunicorn==20.1.0
