@@ -1,5 +1,5 @@
 # george-blog
-Blog built with Flask / REST APIs
+Blog built with Flask / REST APIs.  Site is located on Heroku: https://georgeds-blog.herokuapp.com/
 
 A sample personal blog webiste built with the following Python tools: Flask, SQLAlchemy, Forms, Ckeditor.
 
