@@ -1,9 +1,19 @@
-[tool]
-[tool.poetry]
-authors = ["Your Name <you@example.com>"]
-name = "root"
-version = "0.0.0"
-description="flask template"
-[tool.poetry.dependencies]
-flask = "==1.0.2"
-python = "^3.8"
+[project]
+name = "george-blog"
+version = "0.1.0"
+description = "A blog sample written in Python with Flask"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "python-decouple",
+    "Flask",
+    "Flask-Bootstrap",
+    "Flask-CKEditor",
+    "Werkzeug",
+    "Flask-SQLAlchemy",
+    "SQLAlchemy",
+    "Flask-Login",
+    "Flask-WTF",
+    "WTForms",
+    "psycopg2-binary",
+    "gunicorn",
+]

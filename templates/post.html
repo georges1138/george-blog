@@ -41,9 +41,6 @@
               <ul class="commentList">
                   {% for comment in post.comments %}
                   <li>
-                    <div class="commenterImage">
-                      <img src="{{  comment.commenter.email | gravatar  }}"/>
-                    </div>
                     <div class="commentText">
                       <p>{{  comment.comment | safe }}</p>
                     </div>
