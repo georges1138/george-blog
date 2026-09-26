@@ -10,24 +10,37 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from functools import wraps
 
-app = Flask(__name__)
 
-S_KEY = config('SEC_KEY')
-DB_URL = config('DATABASE_URL')
-POST_DB_URL = config('POSTGRES_DATABASE_URL')
-
-app.config['SECRET_KEY'] = S_KEY
-ckeditor = CKEditor(app)
-Bootstrap(app)
-
-##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = POST_DB_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
+ckeditor = CKEditor()
+bootstrap = Bootstrap()
+db = SQLAlchemy()
 login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+
+
+def create_app(test_config=None):
+    app = Flask(__name__)
+
+    if test_config is None:
+        S_KEY = config('SEC_KEY')
+        POST_DB_URL = config('POSTGRES_DATABASE_URL')
+
+        app.config['SECRET_KEY'] = S_KEY
+        app.config['SQLALCHEMY_DATABASE_URI'] = POST_DB_URL
+    else:
+        app.config.update(test_config)
+
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    ckeditor.init_app(app)
+    bootstrap.init_app(app)
+    db.init_app(app)
+    login_manager.init_app(app)
+
+    login_manager.login_view = 'login'
+
+    register_routes(app)
+    return app
+
 
 ##CONFIGURE TABLES
 
@@ -71,7 +84,6 @@ def load_user(user_id):
     return User.query.get(user_id)
 
 
-@app.errorhandler(403)
 def admin_only(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -83,13 +95,11 @@ def admin_only(f):
     return wrapper
 
 
-@app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
     return render_template("index.html", all_posts=posts)
 
 
-@app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -121,7 +131,6 @@ def register():
     return render_template("register.html", form=form)
 
 
-@app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -144,7 +153,6 @@ def login():
     return render_template("login.html", form=form)
 
 
-@app.route('/logout')
 @login_required
 def logout():
     logout_user()
@@ -152,7 +160,6 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route("/post/<int:post_id>", methods=['GET', 'POST'])
 def show_post(post_id):
     form = CommentForm()
     if form.validate_on_submit():
@@ -172,17 +179,14 @@ def show_post(post_id):
     return render_template("post.html", post=requested_post, form=form)
 
 
-@app.route("/about")
 def about():
     return render_template("about.html")
 
 
-@app.route("/contact")
 def contact():
     return render_template("contact.html")
 
 
-@app.route("/new-post", methods=['GET', 'POST'])
 @login_required
 @admin_only
 def add_new_post():
@@ -203,7 +207,6 @@ def add_new_post():
     return render_template("make-post.html", form=form)
 
 
-@app.route("/edit-post/<int:post_id>", methods=['GET', 'POST'])
 @login_required
 @admin_only
 def edit_post(post_id):
@@ -228,7 +231,6 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form)
 
 
-@app.route("/delete/<int:post_id>")
 @login_required
 @admin_only
 def delete_post(post_id):
@@ -238,5 +240,62 @@ def delete_post(post_id):
     return redirect(url_for('get_all_posts'))
 
 
+def register_routes(app):
+    app.register_error_handler(403, admin_only)
+
+    app.add_url_rule("/", view_func=get_all_posts)
+
+    app.add_url_rule(
+        "/register",
+        view_func=register,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        "/login",
+        view_func=login,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        "/logout",
+        view_func=logout,
+    )
+
+    app.add_url_rule(
+        "/post/<int:post_id>",
+        view_func=show_post,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        "/about",
+        view_func=about,
+    )
+
+    app.add_url_rule(
+        "/contact",
+        view_func=contact,
+    )
+
+    app.add_url_rule(
+        "/new-post",
+        view_func=add_new_post,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        "/edit-post/<int:post_id>",
+        view_func=edit_post,
+        methods=['GET', 'POST'],
+    )
+
+    app.add_url_rule(
+        "/delete/<int:post_id>",
+        view_func=delete_post,
+    )
+
+
 if __name__ == "__main__":
+    app = create_app()
     app.run(host='0.0.0.0', port=5000)
