@@ -241,8 +241,6 @@ def delete_post(post_id):
 
 
 def register_routes(app):
-    app.register_error_handler(403, admin_only)
-
     app.add_url_rule("/", view_func=get_all_posts)
 
     app.add_url_rule(
