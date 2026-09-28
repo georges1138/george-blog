@@ -26,6 +26,8 @@ def test_register_creates_user_and_logs_them_in(client, app):
 
     assert response.status_code == 200
 
+    db.session.remove()
+
     stmt = db.select(
         User
     ).where(User.email == test_email)
@@ -110,6 +112,7 @@ def test_admin_can_create_post(client):
     )
     db.session.add(admin_user)
     db.session.commit()
+    admin_user_id = admin_user.id
 
     assert admin_user.id == 1
 
@@ -142,6 +145,8 @@ def test_admin_can_create_post(client):
 
     assert response.status_code == 200
 
+    db.session.remove()
+
     stmt = db.select(
         BlogPost
     ).where(BlogPost.title == post_title)
@@ -153,7 +158,7 @@ def test_admin_can_create_post(client):
     assert created_post is not None
     assert created_post.title == post_title
     assert created_post.subtitle == post_subtitle
-    assert created_post.poster_id == admin_user.id
+    assert created_post.poster_id == admin_user_id
 
 
 def test_non_admin_gets_403_on_new_post(client):
@@ -247,6 +252,8 @@ def test_logged_in_user_can_comment_on_post(client):
 
     assert add_user.id is not None
     assert add_post.id is not None
+    user_id = add_user.id
+    post_id = add_post.id
 
     response = client.post(
         "/login",
@@ -273,6 +280,8 @@ def test_logged_in_user_can_comment_on_post(client):
 
     assert response.status_code == 200
 
+    db.session.remove()
+
     stmt = db.select(
         Comment
     ).where(Comment.comment == comment_text)
@@ -283,5 +292,5 @@ def test_logged_in_user_can_comment_on_post(client):
 
     assert saved_comment is not None
     assert saved_comment.comment == comment_text
-    assert saved_comment.commenter_id == add_user.id
-    assert saved_comment.post_id == add_post.id
+    assert saved_comment.commenter_id == user_id
+    assert saved_comment.post_id == post_id
