@@ -1,5 +1,6 @@
+from blog.extensions import db
+from blog.models import User, BlogPost, Comment
 from datetime import date
-from main import db, User, BlogPost, Comment
 from werkzeug.security import generate_password_hash
 
 

@@ -1,20 +1,13 @@
 from decouple import config
 from flask import Flask, render_template, redirect, url_for, flash
-from flask_bootstrap import Bootstrap
-from flask_ckeditor import CKEditor
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship
-from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+from flask_login import login_user, login_required, current_user, logout_user
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from functools import wraps
 
-
-ckeditor = CKEditor()
-bootstrap = Bootstrap()
-db = SQLAlchemy()
-login_manager = LoginManager()
+from blog.extensions import ckeditor, bootstrap, db, login_manager
+from blog.models import User, BlogPost, Comment
 
 
 def create_app(test_config=None):
@@ -40,41 +33,6 @@ def create_app(test_config=None):
 
     register_routes(app)
     return app
-
-
-##CONFIGURE TABLES
-
-class BlogPost(db.Model):
-    __tablename__ = "blog_posts"
-    id = db.Column(db.Integer, primary_key=True)
-    # author = db.Column(db.String(250), nullable=False)
-    title = db.Column(db.String(250), unique=True, nullable=False)
-    subtitle = db.Column(db.String(250), nullable=False)
-    date = db.Column(db.String(250), nullable=False)
-    body = db.Column(db.Text, nullable=False)
-    img_url = db.Column(db.String(250), nullable=False)
-    poster_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    comments = db.relationship('Comment', backref='trollers')
-
-    def __repr__(self):
-        return '<BlogPost %r>' % self.title
-
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(200), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    posts = db.relationship('BlogPost', backref='poster')
-    comments = db.relationship('Comment', backref='commenter')
-
-
-class Comment(db.Model):
-    __tablename__ = "comments"
-    id = db.Column(db.Integer, primary_key=True)
-    comment = db.Column(db.Text, nullable=False)
-    commenter_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    post_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
 
 
 # db.create_all()
