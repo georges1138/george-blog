@@ -13,7 +13,6 @@ class PostService:
         )
         return db.session.execute(stmt).scalars().all()
 
-
     @staticmethod
     def get(post_id):
         stmt = db.select(
@@ -22,7 +21,6 @@ class PostService:
             BlogPost.id == post_id
         )
         return db.session.execute(stmt).scalar_one_or_none()
-
 
     @staticmethod
     def create(title, subtitle, body, img_url, poster_id):
@@ -54,7 +52,6 @@ class PostService:
         post.poster_id = poster_id
 
         db.session.commit()
-
         return True
 
     @staticmethod

@@ -2,7 +2,7 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import login_required, login_user, logout_user
 
 from blog.services import UserService
-from forms import LoginForm, RegisterForm
+from blog.forms import LoginForm, RegisterForm
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -11,10 +11,9 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-    user_service = UserService()
 
     if form.validate_on_submit():
-        user = user_service.register(
+        user = UserService.register(
             email=form.email.data,
             password=form.password.data,
             name=form.name.data,
@@ -35,11 +34,10 @@ def register():
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    user_service = UserService()
 
     if form.validate_on_submit():
 
-        user = user_service.authenticate(
+        user = UserService.authenticate(
             form.email.data,
             form.password.data,
         )

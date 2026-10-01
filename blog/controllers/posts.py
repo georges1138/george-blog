@@ -4,7 +4,7 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
 from blog.services import PostService, CommentService
-from forms import CommentForm, CreatePostForm
+from blog.forms import CommentForm, CreatePostForm
 
 
 posts_bp = Blueprint("posts", __name__)
@@ -71,7 +71,6 @@ def add_new_post():
 @admin_only
 def edit_post(post_id):
     post = PostService.get(post_id)
-
 
     edit_form = CreatePostForm(
         title=post.title,

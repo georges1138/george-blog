@@ -1,6 +1,6 @@
 import pytest
 
-from main import create_app
+from blog import create_app
 from blog.extensions import db
 
 
