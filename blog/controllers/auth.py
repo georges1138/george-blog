@@ -1,57 +1,31 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import login_required, login_user, logout_user
-from werkzeug.security import check_password_hash, generate_password_hash
 
-from blog.extensions import db, login_manager
-from blog.models import User
+from blog.services import UserService
 from forms import LoginForm, RegisterForm
 
 
 auth_bp = Blueprint("auth", __name__)
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(user_id)
-
-
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
+    user_service = UserService()
 
     if form.validate_on_submit():
-        print("Got one!!")
+        user = user_service.register(
+            email=form.email.data,
+            password=form.password.data,
+            name=form.name.data,
+        )
 
-        n_email = form.email.data
-        hit = User.query.filter_by(email=n_email).first()
-
-        print(type(hit))
-
-        if hit:
+        if user is None:
             flash("This Email is already used!")
             return redirect(url_for("auth.login"))
 
-        print("New email...creating new account.")
-
-        hash_password = generate_password_hash(
-            form.password.data,
-            method="pbkdf2:sha256",
-            salt_length=8,
-        )
-
-        n_name = form.name.data
-
-        add_user = User(
-            email=n_email,
-            password=hash_password,
-            name=n_name,
-        )
-
-        db.session.add(add_user)
-        db.session.commit()
-
         flash("Account created.")
-        login_user(add_user)
+        login_user(user)
 
         return redirect(url_for("main.get_all_posts"))
 
@@ -61,26 +35,20 @@ def register():
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
+    user_service = UserService()
 
     if form.validate_on_submit():
-        lemail = form.email.data
-        lpassword = form.password.data
 
-        log_user = User.query.filter_by(email=lemail).first()
+        user = user_service.authenticate(
+            form.email.data,
+            form.password.data,
+        )
 
-        if log_user:
-            if check_password_hash(log_user.password, lpassword):
-                login_user(log_user)
+        if user:
+            login_user(user)
+            return redirect(url_for("main.get_all_posts"))
 
-                if log_user.id == 1:
-                    print("Admin mode On.")
-
-                return redirect(url_for("main.get_all_posts"))
-
-            flash("Wrong Password - Try Again.")
-            return redirect(url_for("auth.login"))
-
-        flash("Email Not Found")
+        flash("Invalid email or password.")
         return redirect(url_for("auth.login"))
 
     return render_template("login.html", form=form)

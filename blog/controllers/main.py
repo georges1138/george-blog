@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-from blog.models import BlogPost
+from blog.services import PostService
 
 
 main_bp = Blueprint("main", __name__)
@@ -8,7 +8,7 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.route("/")
 def get_all_posts():
-    posts = BlogPost.query.all()
+    posts = PostService.get_all()
     return render_template("index.html", all_posts=posts)
 
 

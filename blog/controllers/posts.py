@@ -1,11 +1,9 @@
-from datetime import date
 from functools import wraps
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
-from blog.extensions import db
-from blog.models import BlogPost, Comment
+from blog.services import PostService, CommentService
 from forms import CommentForm, CreatePostForm
 
 
@@ -15,14 +13,10 @@ posts_bp = Blueprint("posts", __name__)
 def admin_only(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        print("Something is happening before the function is called.")
-        print(current_user.id)
-
         if current_user.id != 1:
             return render_template("403.html"), 403
 
         return f(*args, **kwargs)
-
     return wrapper
 
 
@@ -32,21 +26,18 @@ def show_post(post_id):
 
     if form.validate_on_submit():
         if current_user.is_authenticated:
-            new_comment = Comment(
-                comment=form.comment.data,
-                commenter_id=current_user.id,
+            CommentService.add(
+                user_id=current_user.id,
                 post_id=post_id,
+                text=form.comment.data,
             )
-
-            db.session.add(new_comment)
-            db.session.commit()
 
             return redirect(url_for("main.get_all_posts"))
 
         flash("You must be logged in to save a comment.")
         return redirect(url_for("auth.login"))
 
-    requested_post = BlogPost.query.get(post_id)
+    requested_post = PostService.get(post_id)
 
     return render_template(
         "post.html",
@@ -62,19 +53,13 @@ def add_new_post():
     form = CreatePostForm()
 
     if form.validate_on_submit():
-        poster = current_user.id
-
-        new_post = BlogPost(
+        PostService.create(
             title=form.title.data,
             subtitle=form.subtitle.data,
             body=form.body.data,
             img_url=form.img_url.data,
-            date=date.today().strftime("%B %d, %Y"),
-            poster_id=poster,
+            poster_id=current_user.id,
         )
-
-        db.session.add(new_post)
-        db.session.commit()
 
         return redirect(url_for("main.get_all_posts"))
 
@@ -85,7 +70,8 @@ def add_new_post():
 @login_required
 @admin_only
 def edit_post(post_id):
-    post = BlogPost.query.get(post_id)
+    post = PostService.get(post_id)
+
 
     edit_form = CreatePostForm(
         title=post.title,
@@ -95,13 +81,14 @@ def edit_post(post_id):
     )
 
     if edit_form.validate_on_submit():
-        post.title = edit_form.title.data
-        post.subtitle = edit_form.subtitle.data
-        post.img_url = edit_form.img_url.data
-        post.poster_id = current_user.id
-        post.body = edit_form.body.data
-
-        db.session.commit()
+        PostService.update(
+            post_id=post.id,
+            title=edit_form.title.data,
+            subtitle=edit_form.subtitle.data,
+            body=edit_form.body.data,
+            img_url=edit_form.img_url.data,
+            poster_id=current_user.id,
+        )
 
         return redirect(
             url_for("posts.show_post", post_id=post.id)
@@ -114,9 +101,6 @@ def edit_post(post_id):
 @login_required
 @admin_only
 def delete_post(post_id):
-    post_to_delete = BlogPost.query.get(post_id)
-
-    db.session.delete(post_to_delete)
-    db.session.commit()
+    PostService.delete(post_id)
 
     return redirect(url_for("main.get_all_posts"))
