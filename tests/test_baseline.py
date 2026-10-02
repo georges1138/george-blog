@@ -295,3 +295,108 @@ def test_logged_in_user_can_comment_on_post(client):
     assert saved_comment.comment == comment_text
     assert saved_comment.commenter_id == user_id
     assert saved_comment.post_id == post_id
+
+
+def test_comment_html_is_sanitized(client):
+
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    test_user_email = 'test_user@email.invalid'
+    test_user_password = 'passtest123'
+    test_user_name = 'test_user'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    hashed_user_password = generate_password_hash(
+        test_user_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    user = User(
+        email=test_user_email,
+        password=hashed_user_password,
+        name=test_user_name,
+    )
+    db.session.add(user)
+    db.session.commit()
+    user_id = user.id
+    assert user_id == 2
+
+    post = BlogPost(
+        title='This is the post title',
+        subtitle='This is the post subtitle',
+        body='This is the post body',
+        img_url="https://www.example.com/img.jpg",
+        date=date.today().strftime("%B %d, %Y"),
+        poster_id=admin_id,
+    )
+    db.session.add(post)
+    db.session.commit()
+    post_id = post.id
+
+    response = client.post(
+        "/login",
+        data={
+            'email': test_user_email,
+            'password': test_user_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    malicious_comment = (
+        "<p>Hello <strong>friend</strong>"
+        "<script>alert(1)</script></p>"
+    )
+
+    with client.session_transaction() as session:
+        assert session["_user_id"] == str(user_id)
+
+    response = client.post(
+        f"/post/{post_id}",
+        data={
+            "comment": malicious_comment,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.get(f"/post/{post_id}")
+    html = response.get_data(as_text=True)
+
+    assert "<script>alert(1)</script>" not in html
+    assert "<strong>friend</strong>" in html
+
+    db.session.remove()
+
+    stmt = db.select(
+        Comment
+    ).where(
+        Comment.commenter_id == user_id,
+        Comment.post_id == post_id,
+    )
+
+    saved_comment = db.session.execute(
+        stmt
+    ).scalar_one_or_none()
+
+    assert saved_comment is not None
+    assert "<script>alert(1)</script>" not in saved_comment.comment
+    assert "<strong>friend</strong>" in saved_comment.comment
