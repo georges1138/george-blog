@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
 from blog.services import PostService, CommentService
@@ -22,6 +22,11 @@ def admin_only(f):
 
 @posts_bp.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
+    requested_post = PostService.get(post_id)
+
+    if requested_post is None:
+        abort(404)
+
     form = CommentForm()
 
     if form.validate_on_submit():
@@ -31,13 +36,10 @@ def show_post(post_id):
                 post_id=post_id,
                 text=form.comment.data,
             )
-
             return redirect(url_for("main.get_all_posts"))
 
         flash("You must be logged in to save a comment.")
         return redirect(url_for("auth.login"))
-
-    requested_post = PostService.get(post_id)
 
     return render_template(
         "post.html",
@@ -72,6 +74,9 @@ def add_new_post():
 def edit_post(post_id):
     post = PostService.get(post_id)
 
+    if post is None:
+        abort(404)
+
     edit_form = CreatePostForm(
         title=post.title,
         subtitle=post.subtitle,
@@ -100,6 +105,9 @@ def edit_post(post_id):
 @login_required
 @admin_only
 def delete_post(post_id):
-    PostService.delete(post_id)
+    deleted = PostService.delete(post_id)
+
+    if not deleted:
+        abort(404)
 
     return redirect(url_for("main.get_all_posts"))

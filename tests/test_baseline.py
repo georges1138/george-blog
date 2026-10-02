@@ -298,7 +298,6 @@ def test_logged_in_user_can_comment_on_post(client):
 
 
 def test_comment_html_is_sanitized(client):
-
     test_admin_email = 'test_admin@email.invalid'
     test_admin_password = 'passadmin123'
     test_admin_name = 'test_admin'
@@ -536,3 +535,167 @@ def test_delete_requires_csrf_token(client, app):
     ).scalar_one_or_none()
 
     assert saved_post is not None
+
+
+def test_missing_post_returns_404(client):
+    response = client.get("/post/999")
+
+    assert response.status_code == 404
+
+
+def test_edit_missing_post_returns_404(client):
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    response = client.post(
+        "/login",
+        data={
+            'email': test_admin_email,
+            'password': test_admin_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.get(
+        "/edit-post/999",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 404
+
+
+def test_delete_missing_post_returns_404(client):
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    response = client.post(
+        "/login",
+        data={
+            'email': test_admin_email,
+            'password': test_admin_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        "/delete/999",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 404
+
+
+def test_comment_on_missing_post_returns_404_and_is_not_saved(client):
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    test_user_email = 'test_user@email.invalid'
+    test_user_password = 'passtest123'
+    test_user_name = 'test_user'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    hashed_user_password = generate_password_hash(
+        test_user_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    # create user
+    user = User(
+        email=test_user_email,
+        password=hashed_user_password,
+        name=test_user_name,
+    )
+    db.session.add(user)
+    db.session.commit()
+    user_id = user.id
+    assert user_id == 2
+
+    # log in user
+    response = client.post(
+        "/login",
+        data={
+            'email': test_user_email,
+            'password': test_user_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    comment_text = "This comment should never be saved"
+
+    response = client.post(
+        "/post/999",
+        data={
+            "comment": comment_text,
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 404
+
+    db.session.remove()
+
+    stmt = db.select(
+        Comment
+    ).where(
+        Comment.comment == comment_text
+    )
+
+    saved_comment = db.session.execute(
+        stmt
+    ).scalar_one_or_none()
+
+    assert saved_comment is None
