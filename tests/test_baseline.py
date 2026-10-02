@@ -400,3 +400,139 @@ def test_comment_html_is_sanitized(client):
     assert saved_comment is not None
     assert "<script>alert(1)</script>" not in saved_comment.comment
     assert "<strong>friend</strong>" in saved_comment.comment
+
+
+def test_get_cannot_delete_post(client):
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    post = BlogPost(
+        title='This is the post title',
+        subtitle='This is the post subtitle',
+        body='This is the post body',
+        img_url="https://www.example.com/img.jpg",
+        date=date.today().strftime("%B %d, %Y"),
+        poster_id=admin_id,
+    )
+    db.session.add(post)
+    db.session.commit()
+    post_id = post.id
+
+    response = client.post(
+        "/login",
+        data={
+            'email': test_admin_email,
+            'password': test_admin_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.get(
+        f"/delete/{post_id}",
+        follow_redirects=False,
+    )
+    assert response.status_code == 405
+
+    db.session.remove()
+
+    stmt = db.select(
+        BlogPost
+    ).where(
+        BlogPost.id == post_id
+    )
+
+    saved_post = db.session.execute(
+        stmt
+    ).scalar_one_or_none()
+
+    assert saved_post is not None
+
+
+def test_delete_requires_csrf_token(client, app):
+    test_admin_email = 'test_admin@email.invalid'
+    test_admin_password = 'passadmin123'
+    test_admin_name = 'test_admin'
+
+    hashed_admin_password = generate_password_hash(
+        test_admin_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_admin_password,
+        name=test_admin_name,
+    )
+    db.session.add(admin)
+    db.session.commit()
+    admin_id = admin.id
+    assert admin_id == 1
+
+    post = BlogPost(
+        title='This is the post title',
+        subtitle='This is the post subtitle',
+        body='This is the post body',
+        img_url="https://www.example.com/img.jpg",
+        date=date.today().strftime("%B %d, %Y"),
+        poster_id=admin_id,
+    )
+    db.session.add(post)
+    db.session.commit()
+    post_id = post.id
+
+    # log in while normal test CSRF is still disabled
+    response = client.post(
+        "/login",
+        data={
+            "email": test_admin_email,
+            "password": test_admin_password,
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    # Turn CSRF protection on for this test
+    app.config["WTF_CSRF_ENABLED"] = True
+
+    # ACT - deliberately omit csrf_token
+    response = client.post(
+        f"/delete/{post_id}",
+        follow_redirects=False,
+    )
+
+    # ASSERT
+    assert response.status_code == 400
+
+    db.session.remove()
+
+    stmt = db.select(
+        BlogPost
+    ).where(
+        BlogPost.id == post_id
+    )
+
+    saved_post = db.session.execute(
+        stmt
+    ).scalar_one_or_none()
+
+    assert saved_post is not None

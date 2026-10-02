@@ -96,7 +96,7 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form)
 
 
-@posts_bp.route("/delete/<int:post_id>")
+@posts_bp.route("/delete/<int:post_id>", methods=["POST"])
 @login_required
 @admin_only
 def delete_post(post_id):

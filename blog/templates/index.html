@@ -29,13 +29,25 @@
               {{post.subtitle}}
             </h3>
           </a>
-          <p class="post-meta">Posted by
-            <a href="#">{{post.poster.name}}</a>
-            on {{post.date}}
-            {% if current_user.is_authenticated and current_user.id == 1 %}
-            <a href="{{url_for('posts.delete_post', post_id=post.id) }}">✘</a>
-            {% endif %}
+          <p class="post-meta">
+              Posted by
+              <a href="#">{{post.poster.name}}</a>
+              on {{post.date}}
           </p>
+            {% if current_user.is_authenticated and current_user.id == 1 %}
+            <form
+                method="post"
+                action="{{ url_for('posts.delete_post', post_id=post.id) }}"
+                style="display: inline;"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+                <button type="submit">✘</button>
+            </form>
+            {% endif %}
         </div>
         <hr>
         {% endfor %}
