@@ -17,6 +17,7 @@ dependencies = [
     "psycopg2-binary>=2.9.13",
     "gunicorn>=26.2.0",
     "nh3>=0.3.7",
+    "flask-migrate>=4.1.0",
 ]
 
 [dependency-groups]
