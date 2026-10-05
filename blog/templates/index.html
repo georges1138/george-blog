@@ -34,7 +34,7 @@
               <a href="#">{{post.poster.name}}</a>
               on {{post.date}}
           </p>
-            {% if current_user.is_authenticated and current_user.id == 1 %}
+            {% if current_user.is_authenticated and current_user.is_admin %}
             <form
                 method="post"
                 action="{{ url_for('posts.delete_post', post_id=post.id) }}"
@@ -54,7 +54,7 @@
 
 
         <!-- New Post -->
-        {% if current_user.is_authenticated and current_user.id == 1 %}
+        {% if current_user.is_authenticated and current_user.is_admin %}
         <div class="clearfix">
           <a class="btn btn-primary float-right" href="{{url_for('posts.add_new_post')}}">Create New Post</a>
         </div>

@@ -110,12 +110,13 @@ def test_admin_can_create_post(client):
         email=test_email,
         password=hashed_password,
         name=test_name,
+        is_admin=True
     )
     db.session.add(admin_user)
     db.session.commit()
     admin_user_id = admin_user.id
 
-    assert admin_user.id == 1
+    assert admin_user.is_admin == True
 
     response = client.post(
         "/login",
@@ -558,11 +559,11 @@ def test_edit_missing_post_returns_404(client):
         email=test_admin_email,
         password=hashed_admin_password,
         name=test_admin_name,
+        is_admin=True,
     )
     db.session.add(admin)
     db.session.commit()
-    admin_id = admin.id
-    assert admin_id == 1
+    assert admin.is_admin == True
 
     response = client.post(
         "/login",
@@ -597,11 +598,11 @@ def test_delete_missing_post_returns_404(client):
         email=test_admin_email,
         password=hashed_admin_password,
         name=test_admin_name,
+        is_admin=True,
     )
     db.session.add(admin)
     db.session.commit()
-    admin_id = admin.id
-    assert admin_id == 1
+    assert admin.is_admin == True
 
     response = client.post(
         "/login",
@@ -699,3 +700,109 @@ def test_comment_on_missing_post_returns_404_and_is_not_saved(client):
     ).scalar_one_or_none()
 
     assert saved_comment is None
+
+
+def test_admin_role_allows_non_id_one_user(client):
+    # create ordinary user first -> should become id 1
+    test1_user_email = 'test1_user@email.invalid'
+    test1_user_password = 'passtest123'
+    test1_user_name = 'test1_user'
+
+    hashed_user1_password = generate_password_hash(
+        test1_user_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    user1 = User(
+        email=test1_user_email,
+        password=hashed_user1_password,
+        name=test1_user_name,
+    )
+    db.session.add(user1)
+    db.session.commit()
+    user1_id = user1.id
+    user1_is_admin = user1.is_admin
+    assert user1_id == 1
+    assert user1_is_admin == False
+
+    # create another user with is_admin=True -> should become id 2
+    test_user2_email = 'test_user2@email.invalid'
+    test_user2_password = 'passtest123'
+    test_user2_name = 'test_user2'
+
+    hashed_user2_password = generate_password_hash(
+        test_user2_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    # create user
+    user2 = User(
+        email=test_user2_email,
+        password=hashed_user2_password,
+        name=test_user2_name,
+        is_admin=True,
+    )
+    db.session.add(user2)
+    db.session.commit()
+    user2_id = user2.id
+    user2_is_admin = user2.is_admin
+    assert user2_id == 2
+    assert user2_is_admin == True
+
+    # log in as the second user
+    response = client.post(
+        "/login",
+        data={
+            'email': test_user2_email,
+            'password': test_user2_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.get("/new-post")
+
+    assert response.status_code == 200
+
+
+def test_id_one_without_admin_role_gets_403(client):
+    # create first user with is_admin=False
+    # confirm this user got id 1
+    test1_user_email = 'test1_user@email.invalid'
+    test1_user_password = 'passtest123'
+    test1_user_name = 'test1_user'
+
+    hashed_user1_password = generate_password_hash(
+        test1_user_password,
+        method='pbkdf2:sha256',
+        salt_length=8
+    )
+
+    user1 = User(
+        email=test1_user_email,
+        password=hashed_user1_password,
+        name=test1_user_name,
+    )
+    db.session.add(user1)
+    db.session.commit()
+    user1_id = user1.id
+    user1_is_admin = user1.is_admin
+    assert user1_id == 1
+    assert user1_is_admin == False
+
+    # log in as that user
+    response = client.post(
+        "/login",
+        data={
+            'email': test1_user_email,
+            'password': test1_user_password,
+        },
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    response = client.get("/new-post")
+
+    assert response.status_code == 403

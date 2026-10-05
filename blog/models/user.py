@@ -9,6 +9,12 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100), nullable=False)
     posts = db.relationship('BlogPost', backref='poster')
     comments = db.relationship('Comment', backref='commenter')
+    is_admin = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=db.false(),
+    )
 
 
 @login_manager.user_loader

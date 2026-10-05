@@ -10,14 +10,15 @@ from blog.forms import CommentForm, CreatePostForm
 posts_bp = Blueprint("posts", __name__)
 
 
-def admin_only(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if current_user.id != 1:
+def admin_only(function):
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_admin:
             return render_template("403.html"), 403
 
-        return f(*args, **kwargs)
-    return wrapper
+        return function(*args, **kwargs)
+
+    return decorated_function
 
 
 @posts_bp.route("/post/<int:post_id>", methods=["GET", "POST"])
