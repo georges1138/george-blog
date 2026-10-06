@@ -32,7 +32,7 @@
           <p class="post-meta">
               Posted by
               <a href="#">{{post.poster.name}}</a>
-              on {{post.date}}
+              on {{ post.published_on.strftime("%B %d, %Y") }}
           </p>
             {% if current_user.is_authenticated and current_user.is_admin %}
             <form

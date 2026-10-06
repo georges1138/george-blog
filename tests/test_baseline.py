@@ -246,7 +246,7 @@ def test_logged_in_user_can_comment_on_post(client):
         subtitle='This is the post subtitle',
         body='This is the post body',
         img_url="https://www.example.com/img.jpg",
-        date=date.today().strftime("%B %d, %Y"),
+        published_on=date.today(),
         poster_id=add_user.id,
     )
     db.session.add(add_post)
@@ -344,7 +344,7 @@ def test_comment_html_is_sanitized(client):
         subtitle='This is the post subtitle',
         body='This is the post body',
         img_url="https://www.example.com/img.jpg",
-        date=date.today().strftime("%B %d, %Y"),
+        published_on=date.today(),
         poster_id=admin_id,
     )
     db.session.add(post)
@@ -428,7 +428,7 @@ def test_get_cannot_delete_post(client):
         subtitle='This is the post subtitle',
         body='This is the post body',
         img_url="https://www.example.com/img.jpg",
-        date=date.today().strftime("%B %d, %Y"),
+        published_on=date.today(),
         poster_id=admin_id,
     )
     db.session.add(post)
@@ -492,7 +492,7 @@ def test_delete_requires_csrf_token(client, app):
         subtitle='This is the post subtitle',
         body='This is the post body',
         img_url="https://www.example.com/img.jpg",
-        date=date.today().strftime("%B %d, %Y"),
+        published_on=date.today(),
         poster_id=admin_id,
     )
     db.session.add(post)
@@ -832,7 +832,7 @@ def test_admin_can_delete_post(client):
         subtitle="Delete test",
         body="This post should disappear",
         img_url="https://www.example.com/img.jpg",
-        date=date.today().strftime("%B %d, %Y"),
+        published_on=date.today(),
         poster_id=admin.id,
     )
     db.session.add(post)
@@ -892,3 +892,48 @@ def test_make_admin_command_promotes_user(app):
     ).scalar_one()
 
     assert promoted_user.is_admin is True
+
+
+def test_home_page_lists_newest_posts_first(client):
+    user = User(
+        email="author@email.invalid",
+        password="not-used",
+        name="author",
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    test_date_1 = date(2025, 1, 10)
+    older_post = BlogPost(
+        title="Older Post",
+        subtitle="Older",
+        body="Older body",
+        img_url="https://www.example.com/older.jpg",
+        published_on=test_date_1,
+        poster_id=user.id,
+    )
+
+    test_date_2 = date(2026, 1, 10)
+    newer_post = BlogPost(
+        title="Newer Post",
+        subtitle="Newer",
+        body="Newer body",
+        img_url="https://www.example.com/newer.jpg",
+        published_on=test_date_2,
+        poster_id=user.id,
+    )
+
+    db.session.add(older_post)
+    db.session.add(newer_post)
+    db.session.commit()
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+
+    html = response.get_data(as_text=True)
+
+    older_position = html.index("Older Post")
+    newer_position = html.index("Newer Post")
+
+    assert newer_position < older_position

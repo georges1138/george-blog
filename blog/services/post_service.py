@@ -10,7 +10,7 @@ class PostService:
     def get_all():
         stmt = db.select(
             BlogPost
-        )
+        ).order_by(BlogPost.published_on.desc())
         return db.session.execute(stmt).scalars().all()
 
     @staticmethod
@@ -29,7 +29,7 @@ class PostService:
             subtitle=subtitle,
             body=body,
             img_url=img_url,
-            date=date.today().strftime("%B %d, %Y"),
+            published_on=date.today(),
             poster_id=poster_id,
         )
 

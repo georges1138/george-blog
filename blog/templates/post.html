@@ -12,7 +12,7 @@
             <h2 class="subheading">{{post.subtitle}}</h2>
             <span class="meta">Posted by
               <a href="#">{{post.poster.name}}</a>
-              on {{post.date}}</span>
+              on {{ post.published_on.strftime("%B %d, %Y") }}</span>
           </div>
         </div>
       </div>
