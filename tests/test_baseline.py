@@ -806,3 +806,89 @@ def test_id_one_without_admin_role_gets_403(client):
     response = client.get("/new-post")
 
     assert response.status_code == 403
+
+
+def test_admin_can_delete_post(client):
+    test_admin_email = "test_admin@email.invalid"
+    test_admin_password = "passadmin123"
+
+    hashed_password = generate_password_hash(
+        test_admin_password,
+        method="pbkdf2:sha256",
+        salt_length=8,
+    )
+
+    admin = User(
+        email=test_admin_email,
+        password=hashed_password,
+        name="test_admin",
+        is_admin=True,
+    )
+    db.session.add(admin)
+    db.session.commit()
+
+    post = BlogPost(
+        title="Post to delete",
+        subtitle="Delete test",
+        body="This post should disappear",
+        img_url="https://www.example.com/img.jpg",
+        date=date.today().strftime("%B %d, %Y"),
+        poster_id=admin.id,
+    )
+    db.session.add(post)
+    db.session.commit()
+    post_id = post.id
+
+    response = client.post(
+        "/login",
+        data={
+            "email": test_admin_email,
+            "password": test_admin_password,
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    response = client.post(
+        f"/delete/{post_id}",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+
+    db.session.remove()
+
+    deleted_post = db.session.get(BlogPost, post_id)
+
+    assert deleted_post is None
+
+
+def test_make_admin_command_promotes_user(app):
+    user = User(
+        email="future-admin@email.invalid",
+        password="not-used-here",
+        name="future-admin",
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    assert user.is_admin is False
+
+    runner = app.test_cli_runner()
+
+    result = runner.invoke(
+        args=["make-admin", "future-admin@email.invalid"]
+    )
+
+    assert result.exit_code == 0
+
+    db.session.remove()
+
+    promoted_user = db.session.execute(
+        db.select(User).where(
+            User.email == "future-admin@email.invalid"
+        )
+    ).scalar_one()
+
+    assert promoted_user.is_admin is True

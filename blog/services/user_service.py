@@ -55,3 +55,22 @@ class UserService:
             return user
 
         return None
+
+
+    @staticmethod
+    def make_admin(email):
+        stmt = db.select(User).where(
+            User.email == email
+        )
+
+        user = db.session.execute(
+            stmt
+        ).scalar_one_or_none()
+
+        if user is None:
+            return None
+
+        user.is_admin = True
+        db.session.commit()
+
+        return user

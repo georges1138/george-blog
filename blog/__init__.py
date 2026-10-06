@@ -1,3 +1,6 @@
+import click
+
+from blog.services import UserService
 from decouple import config
 from flask import Flask
 
@@ -31,5 +34,17 @@ def create_app(test_config=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(posts_bp)
+
+    @app.cli.command("make-admin")
+    @click.argument("email")
+    def make_admin(email):
+        user = UserService.make_admin(email)
+
+        if user is None:
+            raise click.ClickException(
+                f"No user found with email: {email}"
+            )
+
+        click.echo(f"{user.email} is now an admin.")
 
     return app

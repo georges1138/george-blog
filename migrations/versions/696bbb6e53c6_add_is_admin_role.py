@@ -21,11 +21,11 @@ def upgrade():
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('is_admin', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
+    # ### end Alembic commands ###
+
     op.execute(
         'UPDATE "user" SET is_admin = true WHERE id = 1'
     )
-
-    # ### end Alembic commands ###
 
 
 def downgrade():
