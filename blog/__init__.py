@@ -12,8 +12,8 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     if test_config is None:
-        S_KEY = config("SEC_KEY")
-        POST_DB_URL = config("POSTGRES_DATABASE_URL")
+        S_KEY = config("SECRET_KEY")
+        POST_DB_URL = config("DATABASE_URL")
 
         app.config["SECRET_KEY"] = S_KEY
         app.config["SQLALCHEMY_DATABASE_URI"] = POST_DB_URL
