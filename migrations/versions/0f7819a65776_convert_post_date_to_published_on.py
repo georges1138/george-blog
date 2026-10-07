@@ -73,11 +73,18 @@ def downgrade():
 
     connection = op.get_bind()
 
-    results = connection.execute(sa.text("SELECT id, published_on from blog_posts"))
+    posts = sa.table(
+        "blog_posts",
+        sa.column("id", sa.Integer),
+        sa.column("published_on", sa.Date),
+    )
 
-    for row in results:
-        post_id = row[0]
-        date_str = row[1].strftime("%B %d, %Y")
+    results = connection.execute(
+        sa.select(posts.c.id, posts.c.published_on)
+    ).fetchall()
+
+    for post_id, published_on in results:
+        date_str = published_on.strftime("%B %d, %Y")
 
         connection.execute(
             sa.text("UPDATE blog_posts SET date = :old_date WHERE id = :post_id"),

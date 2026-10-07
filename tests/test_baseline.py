@@ -937,3 +937,56 @@ def test_home_page_lists_newest_posts_first(client):
     newer_position = html.index("Newer Post")
 
     assert newer_position < older_position
+
+
+def test_same_day_posts_list_newest_first(client):
+    # create user
+    user = User(
+        email="author@email.invalid",
+        password="not-used",
+        name="author",
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    same_day = date(2026, 10, 6)
+    first_post = BlogPost(
+        title="First Post",
+        subtitle="First",
+        body="First body",
+        img_url="https://www.example.com/first.jpg",
+        published_on=same_day,
+        poster_id=user.id,
+    )
+
+    second_post = BlogPost(
+        title="Second Post",
+        subtitle="Second",
+        body="Second body",
+        img_url="https://www.example.com/second.jpg",
+        published_on=same_day,
+        poster_id=user.id,
+    )
+
+    third_post = BlogPost(
+        title="Third Post",
+        subtitle="Third",
+        body="Third body",
+        img_url="https://www.example.com/third.jpg",
+        published_on=same_day,
+        poster_id=user.id,
+    )
+
+    db.session.add(first_post)
+    db.session.add(second_post)
+    db.session.add(third_post)
+    db.session.commit()
+
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+
+    first_position = html.index("First Post")
+    second_position = html.index("Second Post")
+    third_position = html.index("Third Post")
+
+    assert third_position < second_position < first_position

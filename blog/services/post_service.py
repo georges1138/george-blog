@@ -10,7 +10,10 @@ class PostService:
     def get_all():
         stmt = db.select(
             BlogPost
-        ).order_by(BlogPost.published_on.desc())
+        ).order_by(
+            BlogPost.published_on.desc(),
+            BlogPost.id.desc(),
+        )
         return db.session.execute(stmt).scalars().all()
 
     @staticmethod
