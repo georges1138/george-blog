@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: blog
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U blog -d blog" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  migrate:
+    build: .
+    command: flask --app blog db upgrade
+    environment:
+      DATABASE_URL: postgresql+psycopg2://blog:devpass@db:5432/blog
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+    depends_on:
+      db:
+        condition: service_healthy
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://blog:devpass@db:5432/blog
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+    ports:
+      - "5001:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
