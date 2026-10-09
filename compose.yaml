@@ -16,7 +16,7 @@ services:
     build: .
     command: flask --app blog db upgrade
     environment:
-      DATABASE_URL: postgresql+psycopg2://blog:devpass@db:5432/blog
+      DATABASE_URL: postgresql://blog:devpass@db:5432/blog
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
     depends_on:
       db:
@@ -24,7 +24,7 @@ services:
   app:
     build: .
     environment:
-      DATABASE_URL: postgresql+psycopg2://blog:devpass@db:5432/blog
+      DATABASE_URL: postgresql://blog:devpass@db:5432/blog
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
     ports:
       - "5001:8000"
