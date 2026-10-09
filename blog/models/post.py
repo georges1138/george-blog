@@ -6,6 +6,7 @@ class BlogPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(250), unique=True, nullable=False)
     subtitle = db.Column(db.String(250), nullable=False)
+    ci_probe = db.Column(db.String(20), nullable=True)
     published_on = db.Column(
         db.Date,
         nullable=False,
