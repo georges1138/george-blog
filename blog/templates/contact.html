@@ -1,5 +1,6 @@
-{% include "header.html" %}
+{% extends "base.html" %}
 
+{% block content %}
   <!-- Page Header -->
   <header class="masthead" style="background-image: url('{{ url_for('static', filename='img/contact-bg.jpg')}}')">
     <div class="overlay"></div>
@@ -51,4 +52,4 @@
 
   <hr>
 
-  {% include "footer.html" %}
+{% endblock %}

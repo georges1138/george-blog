@@ -1,6 +1,7 @@
-{% include "header.html" %}
+{% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+{% block content %}
   <!-- Page Header -->
   <header class="masthead" style="background-image: url('{{post.img_url}}')">
     <div class="overlay"></div>
@@ -32,11 +33,9 @@
             </div>
             {% endif %}
             <div>
-              {{ ckeditor.load() }}
-              {{ ckeditor.config(name='comment') }}
-              {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+                {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
             </div>
-<!--           Comments Area -->
+          <!--           Comments Area -->
           <div class="col-lg-8 col-md-10 mx-auto comment">
               <ul class="commentList">
                   {% for comment in post.comments %}
@@ -62,4 +61,9 @@
   </article>
 
   <hr>
-{% include "footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+  {{ ckeditor.load() }}
+  {{ ckeditor.config(name='comment') }}
+{% endblock %}
