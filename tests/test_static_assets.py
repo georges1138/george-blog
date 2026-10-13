@@ -15,7 +15,7 @@ def _static_urls(response):
     return set(STATIC_URL_PATTERN.findall(html))
 
 
-def test_rendered_pages_reference_existing_static_assets(client):
+def _render_covered_pages(client):
     responses = [
         client.get("/"),
         client.get("/about"),
@@ -68,6 +68,12 @@ def test_rendered_pages_reference_existing_static_assets(client):
         ]
     )
 
+    return responses
+
+
+def test_rendered_pages_reference_existing_static_assets(client):
+    responses = _render_covered_pages(client)
+
     static_urls = set()
 
     for response in responses:
@@ -81,3 +87,28 @@ def test_rendered_pages_reference_existing_static_assets(client):
         assert response.status_code == 200, (
             f"Missing static asset: {static_url}"
         )
+
+
+def test_rendered_pages_use_single_frontend_stack(client):
+    responses = _render_covered_pages(client)
+
+    for response in responses:
+        assert response.status_code == 200
+
+        html = response.get_data(as_text=True)
+
+        bootstrap_stylesheets = re.findall(
+            r"""href=['"][^'"]*bootstrap[^'"]*\.css[^'"]*['"]""",
+            html,
+            flags=re.IGNORECASE,
+        )
+        jquery_scripts = re.findall(
+            r"""src=['"][^'"]*jquery[^'"]*\.js[^'"]*['"]""",
+            html,
+            flags=re.IGNORECASE,
+        )
+
+        assert html.lower().count("<!doctype html>") == 1
+        assert len(bootstrap_stylesheets) == 1
+        assert len(jquery_scripts) == 1
+        assert "3.3.7" not in html

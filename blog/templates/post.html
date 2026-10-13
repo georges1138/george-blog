@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap4/form.html" import render_form %}
 
 {% block content %}
   <!-- Page Header -->
@@ -33,7 +33,7 @@
             </div>
             {% endif %}
             <div>
-                {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+                {{ render_form(form, novalidate=True, button_map={"submit": "primary"}) }}
             </div>
           <!--           Comments Area -->
           <div class="col-lg-8 col-md-10 mx-auto comment">

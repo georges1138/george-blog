@@ -26,6 +26,19 @@ wheels = [
 ]
 
 [[package]]
+name = "bootstrap-flask"
+version = "2.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flask" },
+    { name = "wtforms" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/00/86/bea605321c923d9b65f33434c97adaf8e39b6a76e7af081ed638f2ecf072/bootstrap_flask-2.6.0.tar.gz", hash = "sha256:2b0849f77a743e117716a75406b0312f0783658589519b0e922054bfb3102b9f", size = 4572152, upload-time = "2026-08-23T11:17:06.298Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/12/627718708a73fcc4ce713651aaad4dd91eb92e4e47b5abaea0848e4778cf/bootstrap_flask-2.6.0-py3-none-any.whl", hash = "sha256:2a0ff1df295b143020743949419c955de23ffc3465518f4bf5bac32f90deaa52", size = 4673646, upload-time = "2026-08-23T11:17:04.367Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -44,15 +57,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dominate"
-version = "2.9.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fb/f3/1c8088ff19a0fcd9c3234802a0ee47006ea64bd8852f1019194f0e3583ff/dominate-2.9.1.tar.gz", hash = "sha256:558284687d9b8aae1904e3d6051ad132dd4a8c0cf551b37ea4e7e42a31d19dc4", size = 37715, upload-time = "2023-12-24T20:45:19.192Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/19/0380af745f151a1648657bbcef0fb49ac28bf09083d94498163ffd9b32dc/dominate-2.9.1-py2.py3-none-any.whl", hash = "sha256:cb7b6b79d33b15ae0a6e87856b984879927c7c2ebb29522df4c75b28ffd9b989", size = 29976, upload-time = "2023-12-24T20:45:17.154Z" },
-]
-
-[[package]]
 name = "flask"
 version = "3.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -68,17 +72,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/26/00/35d85dcce6c57fdc8
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/9c/34f6962f9b9e9c71f6e5ed806e0d0ff03c9d1b0b2340088a0cf4bce09b18/flask-3.1.3-py3-none-any.whl", hash = "sha256:f4bcbefc124291925f1a26446da31a5178f9483862233b23c0c96a20701f670c", size = 103424, upload-time = "2026-02-19T05:00:56.027Z" },
 ]
-
-[[package]]
-name = "flask-bootstrap"
-version = "3.3.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dominate" },
-    { name = "flask" },
-    { name = "visitor" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/88/53/958ce7c2aa26280b7fd7f3eecbf13053f1302ee2acb1db58ef32e1c23c2a/Flask-Bootstrap-3.3.7.1.tar.gz", hash = "sha256:cb08ed940183f6343a64e465e83b3a3f13c53e1baabb8d72b5da4545ef123ac8", size = 456359, upload-time = "2017-01-11T23:28:23.944Z" }
 
 [[package]]
 name = "flask-ckeditor"
@@ -151,8 +144,8 @@ name = "george-blog"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "bootstrap-flask" },
     { name = "flask" },
-    { name = "flask-bootstrap" },
     { name = "flask-ckeditor" },
     { name = "flask-login" },
     { name = "flask-migrate" },
@@ -174,8 +167,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "bootstrap-flask", specifier = ">=2.6.0" },
     { name = "flask", specifier = ">=3.1.3" },
-    { name = "flask-bootstrap", specifier = ">=3.3.7.1" },
     { name = "flask-ckeditor", specifier = ">=1.0.0" },
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "flask-migrate", specifier = ">=4.1.0" },
@@ -551,12 +544,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/d9/68/f1b440335057bfce7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/21/1e5995a1c920cce14e4bffae20c665ec10e7ed03ab25e006cd741092b718/tzdata-2026.5-py2.py3-none-any.whl", hash = "sha256:b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac", size = 347996, upload-time = "2026-10-03T09:23:12.535Z" },
 ]
-
-[[package]]
-name = "visitor"
-version = "0.1.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d7/58/785fcd6de4210049da5fafe62301b197f044f3835393594be368547142b0/visitor-0.1.3.tar.gz", hash = "sha256:2c737903b2b6864ebc6167eef7cf3b997126f1aa94bdf590f90f1436d23e480a", size = 3260, upload-time = "2016-05-18T19:27:53.383Z" }
 
 [[package]]
 name = "werkzeug"
