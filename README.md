@@ -1,6 +1,6 @@
 # George's Blog
 
-![CI](https://github.com/georges1138/george-blog/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/georges1138/george-blog/actions/workflows/ci.yml/badge.svg)](https://github.com/georges1138/george-blog/actions/workflows/ci.yml)
 
 A Flask blog application I audited and modernized with security fixes, automated tests, database migrations, Docker, continuous integration, and a live Railway deployment.
 
@@ -25,7 +25,7 @@ The work focused on four areas:
 | Database tables were created directly by the application | Versioned schema changes with Flask-Migrate and Alembic |
 | No automated test suite | 24 pytest tests covering application behavior and production configuration |
 | No continuous integration | GitHub Actions runs tests and migration checks on every push |
-| Large vendored frontend dependencies lived in the repository | Smaller local static assets plus pinned CDN dependencies with SRI |
+| Large vendored frontend dependencies lived in the repository | Static files reduced from 12 MB to 0.9 MB; about 67,000 vendored lines removed; container image reduced from 95.2 MB to 84.4 MB |
 | Development-oriented startup only | Docker, Gunicorn, PostgreSQL, and a live Railway deployment |
 
 ## Security Audit & Fixes
@@ -60,7 +60,7 @@ This project intentionally remains small, and a few areas were left for future i
 ## Tech Stack & Architecture
 
 - **Backend:** Python 3.12, Flask, SQLAlchemy, Flask-Migrate/Alembic, PostgreSQL, psycopg 3
-- **Frontend:** Bootstrap-Flask, Jinja templates, CKEditor
+- **Frontend:** Bootstrap 4.6 and jQuery 3.7 from pinned CDN links with SRI, forms rendered with Bootstrap-Flask, Jinja templates, CKEditor 4
 - **Testing & tooling:** pytest, uv, GitHub Actions
 - **Deployment:** Docker, Docker Compose, Gunicorn, Railway
 
@@ -124,7 +124,7 @@ Docker Compose is the simplest way to run the complete application locally with 
 3. Replace the placeholder `SECRET_KEY` in `.env` with a random value. For example:
 
    ```bash
-   python -c "import secrets; print(secrets.token_hex(32))"
+   uv run python -c "import secrets; print(secrets.token_hex(32))"
    ```
 
 4. Build and start the application:
@@ -141,17 +141,20 @@ Docker Compose is the simplest way to run the complete application locally with 
    http://localhost:5001
    ```
 ### Creating an Admin
+
 Register a user through the application first. Then promote that account from another terminal:
+
 ```bash
 docker compose exec app flask --app blog make-admin you@example.com
 ```
 
-Log out and back in after promotion so the application reloads the user's admin status.
 To stop the local environment:
+
 ```bash
 docker compose down
 ```
-Note: The PostgreSQL data is stored in a Docker volume and remains available between normal docker compose down / up cycles.
+
+Note: The PostgreSQL data is stored in a Docker volume and remains available between normal `docker compose down` / `docker compose up` cycles.
 
 ## Tests & Continuous Integration
 
@@ -192,7 +195,7 @@ This confirms that the schema can be built from scratch, contains no model/migra
 
 ### Verifying CI Failure Detection
 
-The migration drift check was also tested deliberately on a temporary branch. Commit [`883d8ac`](https://github.com/georges1138/george-blog/commit/883d8acec90bcc41bda68389b69e22d978c0b0a7) added a model column without creating a corresponding migration.
+The migration drift check was also tested deliberately on a temporary branch. Commit [`883d8ac`](https://github.com/georges1138/george-blog/commit/883d8acec90bcc41bda68389b69e22d978c0b0a7), preserved as the [`ci-drift-probe`](https://github.com/georges1138/george-blog/tree/ci-drift-probe) tag, added a model column without creating a corresponding migration.
 
 The application tests still ran, but the migration job failed as expected because Alembic detected that the models and migration history no longer matched. The probe was not merged into `master`.
 
@@ -262,6 +265,6 @@ Production configuration includes:
 
 - **Sanitize comments when they are saved.** User-submitted HTML is cleaned once before it reaches the database instead of relying on every template to sanitize it correctly later.
 
-- **Use psycopg 3 for PostgreSQL.** The project uses the current psycopg driver rather than carrying forward an older database adapter.
+- **Use psycopg 3 for PostgreSQL.** SQLAlchemy 2.1 made psycopg 3 the default PostgreSQL driver for plain `postgresql://` URLs, which works cleanly with provider-supplied connection URLs without requiring a driver suffix.
 
 - **Use pinned CDN assets with SRI.** Large third-party frontend libraries are not vendored into the repository; pinned CDN resources with Subresource Integrity keep the repository smaller while still verifying downloaded assets.
